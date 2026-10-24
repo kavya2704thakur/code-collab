@@ -16,20 +16,34 @@ export default function App() {
     setLoading(true);
     setOutput(`Compiling & Executing ${language.toUpperCase()}...`);
 
-   try {
-      const res = await fetch('https://emkc.org/api/v2/piston/execute', {
+ try {
+      const languageMap = {
+        javascript: 63,
+        python: 71,
+        java: 62,
+        cpp: 54,
+        c: 50
+      };
+
+      const langId = languageMap[language] || 63;
+
+      const res = await fetch('https://ce.judge0.com/submissions?wait=true', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          language: language === 'javascript' ? 'javascript' : language,
-          version: '*',
-          files: [{ content: code }]
+          source_code: code,
+          language_id: langId
         }),
       });
+
       const data = await res.json();
-      const runResult = data.run ? (data.run.output || data.run.stderr || 'Execution finished with no output.') : (data.message || 'Execution failed.');
+      const runResult = data.stdout || data.stderr || data.compile_output || data.message || 'Execution finished with no output.';
       setOutput(runResult);
     } catch (err) {
+      setOutput('Error: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
       setOutput(`Error: ${err.message}`);
     } finally {
       setLoading(false);
