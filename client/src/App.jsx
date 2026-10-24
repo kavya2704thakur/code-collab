@@ -16,14 +16,19 @@ export default function App() {
     setLoading(true);
     setOutput(`Compiling & Executing ${language.toUpperCase()}...`);
 
-    try {
-      const res = await fetch('/api/execute', {
+   try {
+      const res = await fetch('https://emkc.org/api/v2/piston/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, language }),
+        body: JSON.stringify({
+          language: language === 'javascript' ? 'javascript' : language,
+          version: '*',
+          files: [{ content: code }]
+        }),
       });
       const data = await res.json();
-      setOutput(data.output || data.error || 'Execution finished with no output.');
+      const runResult = data.run ? (data.run.output || data.run.stderr || 'Execution finished with no output.') : (data.message || 'Execution failed.');
+      setOutput(runResult);
     } catch (err) {
       setOutput(`Error: ${err.message}`);
     } finally {
